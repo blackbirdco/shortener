@@ -141,8 +141,10 @@ class Shortener::ShortenedUrl < ActiveRecord::Base
   define_method CREATE_METHOD_NAME do
     count = 0
     begin
-      self.unique_key = custom_key || generate_unique_key
-      super()
+      transaction(requires_new: true) do
+        self.unique_key = custom_key || generate_unique_key
+        super()
+      end
     rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid => err
       logger.info("Failed to generate ShortenedUrl with unique_key: #{unique_key}")
       self.unique_key = nil
